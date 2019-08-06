@@ -1,5 +1,7 @@
 from django.shortcuts import render
+from django.views import generic
+from .models import Game
 
-def index(request):
-    return render(request, 'game/game_list.html')
+class GameDetailView(generic.DetailView):
+    model = Game
 
