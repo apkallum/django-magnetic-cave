@@ -5,12 +5,12 @@
      1     2     3     4     5     6     7     8 
 </pre>
 <pre id="game">
-                {{game.state}}
+{{game.state}}
 </pre>
 </body>
 <script>
         window.onload = function(){
-            document.getElementById('game').textContent = _.replace(document.getElementById('game').textContent, /([1-9(),:{}])+/g, "")
-            document.getElementById('game').textContent = _.replace(document.getElementById('game').textContent, /([ ])+/g, "     ")
+           // document.getElementById('game').textContent = _.replace(document.getElementById('game').textContent, /([1-9(),:{}])+/g, "")
+           // document.getElementById('game').textContent = _.replace(document.getElementById('game').textContent, /([ ])+/g, "     ")
         }
 </script>
