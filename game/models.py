@@ -24,7 +24,7 @@ class Game(TimeStampedModel):
             "(8,1)": 0,"(8,2)": 0,"(8,3)": 0,"(8,4)": 0,"(8,5)": 0,"(8,6)": 0,"(8,7)": 0,"(8,8)": 0
     }""")
 
-
+    # Place token on board if it's a legal move 
     def place_token(self, move):
         if self.is_legal(move):
             serialized_state = json.loads(self.state) 
@@ -39,6 +39,9 @@ class Game(TimeStampedModel):
 
 
     def is_legal(self, move):
+        serialized_state = json.loads(self.state) 
+        if serialized_state[move.move_coordinates] == "J" or serialized_state[move.move_coordinates] == "K":
+            return False
         return True
         
 
