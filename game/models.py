@@ -10,7 +10,7 @@ def into_json(data):
     return json.dump
 
 class Game(TimeStampedModel):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    id = models.CharField(primary_key=True, default=uuid.uuid4().hex, editable=False, max_length=32)
     player1 = models.ForeignKey(User, related_name='Player1', on_delete=models.CASCADE)
     player2 = models.ForeignKey(User, related_name='Player2', on_delete=models.CASCADE)
     state = models.TextField(default="""{
@@ -34,9 +34,11 @@ class Game(TimeStampedModel):
                 serialized_state[move.move_coordinates] = "K"
             self.state = json.dumps(serialized_state)
             super().save()
+        else:
+            return "failed to place token"
 
 
-    def is_legal(self, parameter_list):
+    def is_legal(self, move):
         return True
         
 
@@ -46,4 +48,10 @@ class Game(TimeStampedModel):
 class Move(TimeStampedModel):
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
     player = models.ForeignKey(User, on_delete=models.CASCADE)
-    move_coordinates = models.CharField(max_length=7) # Sanitizing the input with e.g Regex would be necassary, but is skipped
+    # Sanitizing the input with e.g Regex would be necassary, but is skipped here for brevity
+    move_coordinates = models.CharField(max_length=7) 
+    
+    def save(self, *args, **kwargs):
+        current_game = Game.objects.get(id=self.game_id)
+        current_game.place_token(self)
+        super().save(*args, **kwargs)
