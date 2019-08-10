@@ -43,20 +43,54 @@ class Game(TimeStampedModel):
 
 
     def is_legal(self, move):
-        if self.is_occupied(move):
+        if not self.is_valid_magnetically(move):
             return False 
+        if self.is_occupied(move):
+            return False
         return True
+        
 
         
     def is_occupied(self, move):
         serialized_state_for_legality = json.loads(self.state)
-        # print(type(serialized_state_for_legality))
-        # print(serialized_state_for_legality)
-        # print(serialized_state_for_legality[move.move_coordinates])
         if serialized_state_for_legality[move.move_coordinates] == "J" or serialized_state_for_legality[move.move_coordinates] == "K":
              return True
         return False
+
+    def who_is_there(self, cell):
+        serialized_state_for_legality = json.loads(self.state)
+        if serialized_state_for_legality[cell] == "J":
+            return "J"
+        elif serialized_state_for_legality[cell] == "K":
+            return "K"
+        else:
+            return 0
     
+    def is_valid_magnetically(self, move):
+        """
+        Check a token can be placed against the walls.
+        """
+        # Check if against the wall
+        if move.move_coordinates[1] == '1' or move.move_coordinates[1] == '8':
+            return True
+        # transform original move coordinates (x,y) to (x-1,y), to check leftwards
+        coordinates = list(move.move_coordinates)[:]
+        x_value = int(coordinates[1])
+        coordinates[1] = str(x_value - 1)
+        coordinates = "".join(coordinates)
+        if not self.who_is_there(coordinates):
+            return True
+        # transform original move coordinates (x,y) to (x+1, y) to check rightwards
+        coordinates = list(move.move_coordinates)[:]
+        coordinates[1] = str(x_value + 1)
+        coordinates = "".join(coordinates)
+        if not self.who_is_there(coordinates):
+            return True       
+        return False
+    
+
+
+
 
 
     
