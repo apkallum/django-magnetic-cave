@@ -6,6 +6,9 @@ from django.contrib.auth.models import User
 
 from model_utils.models import TimeStampedModel
 
+def into_json(data):
+    return json.dump
+
 class Game(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     player1 = models.ForeignKey(User, related_name='Player1', on_delete=models.CASCADE)
@@ -20,15 +23,21 @@ class Game(TimeStampedModel):
             "(7,1)": 0,"(7,2)": 0,"(7,3)": 0,"(7,4)": 0,"(7,5)": 0,"(7,6)": 0,"(7,7)": 0,"(7,8)": 0,
             "(8,1)": 0,"(8,2)": 0,"(8,3)": 0,"(8,4)": 0,"(8,5)": 0,"(8,6)": 0,"(8,7)": 0,"(8,8)": 0
     }""")
-    
+
+
     def place_token(self, move):
-        if move.player == player1: 
-            state[move.move_coordinates] = 'X'
-        else: 
-            state[move.move_coordinates] = 'Y'
+        if self.is_legal(move):
+            serialized_state = json.loads(self.state) 
+            if move.player == self.player1: 
+                serialized_state[move.move_coordinates] = "J"
+            elif move.player == self.player2: 
+                serialized_state[move.move_coordinates] = "K"
+            self.state = json.dumps(serialized_state)
+            super().save()
+
 
     def is_legal(self, parameter_list):
-        pass
+        return True
         
 
     
