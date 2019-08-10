@@ -1,5 +1,6 @@
 import uuid
 import json
+from copy import copy
 
 from django.db import models
 from django.contrib.auth.models import User
@@ -11,8 +12,8 @@ def into_json(data):
 
 class Game(TimeStampedModel):
     id = models.CharField(primary_key=True, default=uuid.uuid4().hex, editable=False, max_length=32)
-    player1 = models.ForeignKey(User, related_name='Player1', on_delete=models.CASCADE)
-    player2 = models.ForeignKey(User, related_name='Player2', on_delete=models.CASCADE)
+    player1 = models.ForeignKey(User, related_name='Player1', on_delete=models.CASCADE, blank=False)
+    player2 = models.ForeignKey(User, related_name='Player2', on_delete=models.CASCADE, blank=False)
     state = models.TextField(default="""{
             "(1,1)": 0,"(1,2)": 0,"(1,3)": 0,"(1,4)": 0,"(1,5)": 0,"(1,6)": 0,"(1,7)": 0,"(1,8)": 0,
             "(2,1)": 0,"(2,2)": 0,"(2,3)": 0,"(2,4)": 0,"(2,5)": 0,"(2,6)": 0,"(2,7)": 0,"(2,8)": 0,
@@ -27,34 +28,49 @@ class Game(TimeStampedModel):
     # Place token on board if it's a legal move 
     def place_token(self, move):
         if self.is_legal(move):
-            serialized_state = json.loads(self.state) 
-            if move.player == self.player1: 
-                serialized_state[move.move_coordinates] = "J"
-            elif move.player == self.player2: 
-                serialized_state[move.move_coordinates] = "K"
-            self.state = json.dumps(serialized_state)
-            super().save()
+           serialized_state = json.loads(self.state) 
+           if move.player == self.player1: 
+               serialized_state[move.move_coordinates] = "J"
+           elif move.player == self.player2: 
+               serialized_state[move.move_coordinates] = "K"
+           self.state = json.dumps(serialized_state)
+           super().save()
+           return True
         else:
-            return "failed to place token"
+           print("Illegal move")
+           return False
+
 
 
     def is_legal(self, move):
-        serialized_state = json.loads(self.state) 
-        if serialized_state[move.move_coordinates] == "J" or serialized_state[move.move_coordinates] == "K":
-            return False
+        if self.is_occupied(move):
+            return False 
         return True
+
         
+    def is_occupied(self, move):
+        serialized_state_for_legality = json.loads(self.state)
+        # print(type(serialized_state_for_legality))
+        # print(serialized_state_for_legality)
+        # print(serialized_state_for_legality[move.move_coordinates])
+        if serialized_state_for_legality[move.move_coordinates] == "J" or serialized_state_for_legality[move.move_coordinates] == "K":
+             return True
+        return False
+    
+
 
     
 
 
 class Move(TimeStampedModel):
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
-    player = models.ForeignKey(User, on_delete=models.CASCADE)
+    player = models.ForeignKey(User, on_delete=models.CASCADE, related_name="move_player")
     # Sanitizing the input with e.g Regex would be necassary, but is skipped here for brevity
-    move_coordinates = models.CharField(max_length=7) 
+    move_coordinates = models.CharField(max_length=15, blank=False) 
     
     def save(self, *args, **kwargs):
         current_game = Game.objects.get(id=self.game_id)
-        current_game.place_token(self)
-        super().save(*args, **kwargs)
+        if current_game.place_token(self):
+            super().save(*args, **kwargs)
+        else:
+            print("Could not save move from move")
