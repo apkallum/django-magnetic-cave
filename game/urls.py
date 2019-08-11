@@ -8,5 +8,5 @@ from .views import GameCreateView
 urlpatterns = [
     path('create/', GameCreateView.as_view(), name="create"),
     path('<pk>', GameDetailView.as_view(), name='GameDetailView'),
-      path('login/', LoginView.as_view(), name="login"),
+    path('login/', LoginView.as_view(), name="login"),
 ]

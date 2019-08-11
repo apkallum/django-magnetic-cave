@@ -1,6 +1,8 @@
 import uuid
 import json
 from copy import copy
+import re
+
 
 from django.db import models
 from django.contrib.auth.models import User
@@ -40,9 +42,28 @@ class Game(TimeStampedModel):
            print("Illegal move")
            return False
 
+        def who_is_there(self, coordinates: str):
+            serialized_state_for_legality = json.loads(self.state)
+            if serialized_state_for_legality[coordinates] == "J":
+                return "J"
+            elif serialized_state_for_legality[coordinates] == "K":
+                return "K"
+            else:
+                return 0
 
 
-    def is_legal(self, move):
+    def increment_coordinates(self, coordinates: str, axis: str, amount: int) -> str:
+        coordinates = list(coordinates)[:]
+        if axis == "x-axis":
+            axis_value = 1
+        elif axis == "y-axis":
+            axis_value = 3
+        original_value = int(coordinates[axis_value])
+        coordinates[axis_value] = str(original_value + amount)
+        coordinates = "".join(coordinates)
+        return coordinates
+
+    def is_legal(self, move) -> bool:
         if not self.is_valid_magnetically(move):
             return False 
         if self.is_occupied(move):
@@ -50,45 +71,45 @@ class Game(TimeStampedModel):
         return True
         
 
+       
         
-    def is_occupied(self, move):
+    def is_occupied(self, move) -> bool:
         serialized_state_for_legality = json.loads(self.state)
         if serialized_state_for_legality[move.move_coordinates] == "J" or serialized_state_for_legality[move.move_coordinates] == "K":
-             return True
+            print("It's occupied")
+            return True
         return False
 
-    def who_is_there(self, cell):
-        serialized_state_for_legality = json.loads(self.state)
-        if serialized_state_for_legality[cell] == "J":
-            return "J"
-        elif serialized_state_for_legality[cell] == "K":
-            return "K"
-        else:
-            return 0
-    
+
+ 
+            
     def is_valid_magnetically(self, move):
         """
         Check a token can be placed against the walls.
         """
         # Check if against the wall
         if move.move_coordinates[1] == '1' or move.move_coordinates[1] == '8':
+            print("I'm against the wall")
             return True
         # transform original move coordinates (x,y) to (x-1,y), to check leftwards
-        coordinates = list(move.move_coordinates)[:]
-        x_value = int(coordinates[1])
-        coordinates[1] = str(x_value - 1)
-        coordinates = "".join(coordinates)
-        if not self.who_is_there(coordinates):
+        coordinates = copy(move.move_coordinates)
+        coordinates = self.increment_coordinates(coordinates, "x-axis", 1)
+        if self.who_is_there(coordinates):
+            print("There is something to my left")
             return True
         # transform original move coordinates (x,y) to (x+1, y) to check rightwards
-        coordinates = list(move.move_coordinates)[:]
-        coordinates[1] = str(x_value + 1)
-        coordinates = "".join(coordinates)
-        if not self.who_is_there(coordinates):
-            return True       
+        coordinates = copy(move.move_coordinates)
+        coordinates = self.increment_coordinates(coordinates, "x-axis", 1)
+        if self.who_is_there(coordinates):
+            print("There is something to my right")
+            return True
+        print("far from the wall")       
         return False
-    
 
+        def is_winner(self, move):
+            pass
+    
+        
 
 
 
@@ -103,8 +124,16 @@ class Move(TimeStampedModel):
     move_coordinates = models.CharField(max_length=15, blank=False) 
     
     def save(self, *args, **kwargs):
-        current_game = Game.objects.get(id=self.game_id)
-        if current_game.place_token(self):
-            super().save(*args, **kwargs)
+        coordinates_for_test = self.move_coordinates
+        if type(coordinates_for_test) is not str:
+            print("Invalid Input not string")
         else:
-            print("Could not save move from move")
+            valid_coordinates = re.fullmatch(r'([(]{1}[1-8]{1}[,][1-8]{1}[)]{1})', coordinates_for_test)
+            if valid_coordinates:
+                current_game = Game.objects.get(id=self.game_id)
+                if current_game.place_token(self):
+                    super().save(*args, **kwargs)
+                else:
+                    print("Could not save move from move")
+            else:
+                print("Invalid coordinates")
