@@ -13,7 +13,7 @@ def into_json(data):
     return json.dump
 
 class Game(TimeStampedModel):
-    id = models.CharField(primary_key=True, default=uuid.uuid4().hex, editable=False, max_length=32)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, max_length=32)
     # Referring to User model directly since I have no plans to 
     player1 = models.ForeignKey(User, related_name='Player1', on_delete=models.CASCADE, blank=False)
     player2 = models.ForeignKey(User, related_name='Player2', on_delete=models.CASCADE, blank=True, null=True)
