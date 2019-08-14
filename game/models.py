@@ -32,6 +32,9 @@ class Game(TimeStampedModel):
 
     # Place token on board if it's a legal move 
     def place_token(self, move):
+        if self.game_over == True:
+            print("Game over")
+            return False
         if self.is_legal(move):
            serialized_state = json.loads(self.state) 
            if move.player == self.player1: 
@@ -72,9 +75,7 @@ class Game(TimeStampedModel):
         if self.is_occupied(move):
             return False
         return True
-        
-
-       
+              
         
     def is_occupied(self, move) -> bool:
         serialized_state_for_legality = json.loads(self.state)
@@ -109,10 +110,21 @@ class Game(TimeStampedModel):
         print("far from the wall")       
         return False
 
+        
         def is_winner(self, move):
             pass
     
+        def is_winner_vertically(self, move):
+            pass
         
+        def is_winner_horizontally(self, move):
+            pass
+        
+        def is_winner_p_diagonal(self, move):
+            pass
+
+        def is_winner_n_diagonal(self, move):
+            pass
 
 
 
