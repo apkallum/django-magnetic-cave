@@ -1,12 +1,10 @@
 from django.urls import path
 
-from django.contrib.auth.views import LoginView
-
-from .views import GameDetailView
-from .views import GameCreateView
+from .views import GamePlayView, GameCreateView
+from .views import index
 
 urlpatterns = [
+    path('', index, name='index'),
     path('create/', GameCreateView.as_view(), name="create"),
-    path('<pk>', GameDetailView.as_view(), name='GameDetailView'),
-    path('login/', LoginView.as_view(), name="login"),
+    path('<str:id>', GamePlayView, name='GamePlayView'),
 ]

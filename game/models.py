@@ -44,7 +44,7 @@ class Game(TimeStampedModel):
            print("Illegal move")
            return False
 
-        def who_is_there(self, coordinates: str):
+    def who_is_there(self, coordinates: str):
             serialized_state_for_legality = json.loads(self.state)
             if serialized_state_for_legality[coordinates] == "J":
                 return "J"
