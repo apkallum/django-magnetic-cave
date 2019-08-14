@@ -16,8 +16,9 @@ class Game(TimeStampedModel):
     id = models.CharField(primary_key=True, default=uuid.uuid4().hex, editable=False, max_length=32)
     # Referring to User model directly since I have no plans to 
     player1 = models.ForeignKey(User, related_name='Player1', on_delete=models.CASCADE, blank=False)
-    player2 = models.ForeignKey(User, related_name='Player2', on_delete=models.CASCADE, blank=False)
+    player2 = models.ForeignKey(User, related_name='Player2', on_delete=models.CASCADE, blank=True, null=True)
     game_over = models.BooleanField(default=False)
+    winner = models.ForeignKey(User, related_name='Winner', on_delete=models.CASCADE, blank=True, null=True)
     state = models.TextField(default="""{
             "(1,1)": 0,"(1,2)": 0,"(1,3)": 0,"(1,4)": 0,"(1,5)": 0,"(1,6)": 0,"(1,7)": 0,"(1,8)": 0,
             "(2,1)": 0,"(2,2)": 0,"(2,3)": 0,"(2,4)": 0,"(2,5)": 0,"(2,6)": 0,"(2,7)": 0,"(2,8)": 0,
