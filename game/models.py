@@ -9,8 +9,6 @@ from django.contrib.auth.models import User
 
 from model_utils.models import TimeStampedModel
 
-def into_json(data):
-    return json.dump
 
 class Game(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, max_length=32)
@@ -58,16 +56,17 @@ class Game(TimeStampedModel):
                 return 0
 
 
-    def increment_coordinates(self, coordinates: str, axis: str, amount: int) -> str:
-        coordinates = list(coordinates)[:]
-        if axis == "x-axis":
-            axis_value = 1
-        elif axis == "y-axis":
-            axis_value = 3
-        original_value = int(coordinates[axis_value])
-        coordinates[axis_value] = str(original_value + amount)
-        coordinates = "".join(coordinates)
-        return coordinates
+    # def increment_coordinates(self, coordinates: str, axis: str, amount: int) -> str:
+    #     # coordinates = list(coordinates)[:]
+    #     # if axis == "x-axis":
+    #     #     axis_value = 1
+    #     # elif axis == "y-axis":
+    #     #     axis_value = 3
+    #     # original_value = int(coordinates[axis_value])
+    #     # coordinates[axis_value] = str(original_value + amount)
+    #     # coordinates = "".join(coordinates)
+    #     # return coordinates
+
 
     def is_legal(self, move) -> bool:
         if not self.is_valid_magnetically(move):
@@ -97,33 +96,58 @@ class Game(TimeStampedModel):
             return True
         # transform original move coordinates (x,y) to (x-1,y), to check leftwards
         coordinates = copy(move.move_coordinates)
-        coordinates = self.increment_coordinates(coordinates, "x-axis", 1)
+        coordinates = self.increment_coordinates(coordinates, -1, 0)
         if self.who_is_there(coordinates):
             print("There is something to my left")
             return True
         # transform original move coordinates (x,y) to (x+1, y) to check rightwards
         coordinates = copy(move.move_coordinates)
-        coordinates = self.increment_coordinates(coordinates, "x-axis", 1)
+        coordinates = self.increment_coordinates(coordinates, 1, 0)
         if self.who_is_there(coordinates):
             print("There is something to my right")
             return True
         print("far from the wall")       
         return False
 
+        # New increment function, to replace increment_coordinates
+    def increment_coordinates(self, coordinates, x_amount, y_amount):
+            coordinates = list(coordinates)[:]
+            if x_amount:
+                print("Before adding x_amount, coordinates are", coordinates)
+                axis_value = 1
+                original_value = int(coordinates[axis_value])
+                coordinates[axis_value] = str(original_value + x_amount)
+                print("After adding x_amount, coordinates are", coordinates)
+            if y_amount:
+                print("Before adding y_amount, coordinates are", coordinates)
+                axis_value = 3
+                original_value = int(coordinates[axis_value])
+                coordinates[axis_value] = str(original_value + y_amount)
+                print("After adding y_amount, coordinates are", coordinates)
+            coordinates = "".join(coordinates)
+            print("Final coordinates are", coordinates)
+            return coordinates
         
-        def is_winner(self, move):
-            pass
-    
-        def is_winner_vertically(self, move):
-            pass
-        
-        def is_winner_horizontally(self, move):
-            pass
-        
-        def is_winner_p_diagonal(self, move):
+    def count_five_tokens(self, coordinates, axis):
+            """
+            Counts five tokens in the positive and negative directions
+            Return "J" if player1 has 5, "K" if player2 has 5, or 0 if neither have 5
+            """
             pass
 
-        def is_winner_n_diagonal(self, move):
+    def is_winner(self, move):
+            pass
+    
+    def is_winner_vertically(self, move):
+            pass
+        
+    def is_winner_horizontally(self, move):
+            pass
+        
+    def is_winner_p_diagonal(self, move):
+            pass
+
+    def is_winner_n_diagonal(self, move):
             pass
 
 
