@@ -31,7 +31,8 @@ class Game(TimeStampedModel):
      
     def place_token(self, move):
         """
-        Place token on board if it's a legal move, then check if a win has occured
+        Place token on board if it's a legal move, save to the database
+        then check if a win has occured 
         """
         if self.game_over == True:
             print("Game over")
@@ -44,10 +45,10 @@ class Game(TimeStampedModel):
                serialized_state[move.move_coordinates] = "K"
            self.state = json.dumps(serialized_state)
            super().save()
-           if self.is_winner_vertically(move):
+           if self.is_winner(move):
                self.game_over = True
-               winner = self.is_winner_vertically(move)
-               print(winner, "is winn")
+               winner = move.player
+               print(winner, "is winner")
                super().save()
            return True
         else:
@@ -140,24 +141,35 @@ class Game(TimeStampedModel):
                        
 
     def is_winner(self, move):
-            pass
+            if self.is_winner_vertically(move):
+                print("Vertical win!")
+                return True
+            if self.is_winner_horizontally(move):
+                print("Horizontal win!")
+                return True
     
     def is_winner_vertically(self, move):
             if self.count_five_tokens(move.move_coordinates, "J", 0, 1):
-                print("There are five!")
-                return "J"
+                return True
             if self.count_five_tokens(move.move_coordinates, "J", 0, -1):
-                print("There are five!")
-                return "J"
+                return True
             if self.count_five_tokens(move.move_coordinates, "K", 0, 1):
-                print("There are five!")
-                return "K"
+                return True
             if self.count_five_tokens(move.move_coordinates, "K", 0, -1):
-                return "K"
+                return True
+            return False
                                     
 
     def is_winner_horizontally(self, move):
-            pass
+            if self.count_five_tokens(move.move_coordinates, "J", 1, 0):
+                return True
+            if self.count_five_tokens(move.move_coordinates, "J", -1, 0):
+                return True
+            if self.count_five_tokens(move.move_coordinates, "K", 1, 0):
+                return True
+            if self.count_five_tokens(move.move_coordinates, "K", -1, 0):
+                return True
+            return False
         
     def is_winner_p_diagonal(self, move):
             pass
