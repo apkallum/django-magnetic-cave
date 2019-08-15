@@ -9,7 +9,7 @@ from django.contrib.auth.models import User
 
 from model_utils.models import TimeStampedModel
 
-
+# Eschew using constants for sake of simplicity
 class Game(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, max_length=32)
     # Referring to User model directly since I have no plans to 
@@ -28,8 +28,11 @@ class Game(TimeStampedModel):
             "(8,1)": 0,"(8,2)": 0,"(8,3)": 0,"(8,4)": 0,"(8,5)": 0,"(8,6)": 0,"(8,7)": 0,"(8,8)": 0
     }""")
 
-    # Place token on board if it's a legal move 
+     
     def place_token(self, move):
+        """
+        Place token on board if it's a legal move, then check if a win has occured
+        """
         if self.game_over == True:
             print("Game over")
             return False
@@ -41,6 +44,11 @@ class Game(TimeStampedModel):
                serialized_state[move.move_coordinates] = "K"
            self.state = json.dumps(serialized_state)
            super().save()
+           if self.is_winner_vertically(move):
+               self.game_over = True
+               winner = self.is_winner_vertically(move)
+               print(winner, "is winn")
+               super().save()
            return True
         else:
            print("Illegal move")
@@ -55,18 +63,18 @@ class Game(TimeStampedModel):
             else:
                 return 0
 
-
-    # def increment_coordinates(self, coordinates: str, axis: str, amount: int) -> str:
-    #     # coordinates = list(coordinates)[:]
-    #     # if axis == "x-axis":
-    #     #     axis_value = 1
-    #     # elif axis == "y-axis":
-    #     #     axis_value = 3
-    #     # original_value = int(coordinates[axis_value])
-    #     # coordinates[axis_value] = str(original_value + amount)
-    #     # coordinates = "".join(coordinates)
-    #     # return coordinates
-
+    def increment_coordinates(self, coordinates, x_amount, y_amount):
+            coordinates = list(coordinates)[:]
+            if x_amount:
+                axis_value = 1
+                original_value = int(coordinates[axis_value])
+                coordinates[axis_value] = str(original_value + x_amount)
+            if y_amount:
+                axis_value = 3
+                original_value = int(coordinates[axis_value])
+                coordinates[axis_value] = str(original_value + y_amount)
+            coordinates = "".join(coordinates)
+            return coordinates    
 
     def is_legal(self, move) -> bool:
         if not self.is_valid_magnetically(move):
@@ -109,38 +117,45 @@ class Game(TimeStampedModel):
         print("far from the wall")       
         return False
 
-        # New increment function, to replace increment_coordinates
-    def increment_coordinates(self, coordinates, x_amount, y_amount):
-            coordinates = list(coordinates)[:]
-            if x_amount:
-                print("Before adding x_amount, coordinates are", coordinates)
-                axis_value = 1
-                original_value = int(coordinates[axis_value])
-                coordinates[axis_value] = str(original_value + x_amount)
-                print("After adding x_amount, coordinates are", coordinates)
-            if y_amount:
-                print("Before adding y_amount, coordinates are", coordinates)
-                axis_value = 3
-                original_value = int(coordinates[axis_value])
-                coordinates[axis_value] = str(original_value + y_amount)
-                print("After adding y_amount, coordinates are", coordinates)
-            coordinates = "".join(coordinates)
-            print("Final coordinates are", coordinates)
-            return coordinates
+
         
-    def count_five_tokens(self, coordinates, axis):
+    def count_five_tokens(self, coordinates, player_token_letter, x_amount, y_amount):
             """
-            Counts five tokens in the positive and negative directions
-            Return "J" if player1 has 5, "K" if player2 has 5, or 0 if neither have 5
+            Counts five tokens from (x,y) by incrementally cheking (x+x_amount, y+y_amount) 
             """
-            pass
+            player_tokens = 0
+            for i in range(5):
+                print("At loop", i, "I'm at coordinates", coordinates)
+                if coordinates[1] == '0' or coordinates[3] == '0' or coordinates[1] == '9' or coordinates[3] == '9':
+                    break 
+                if self.who_is_there(coordinates) == player_token_letter:
+                    player_tokens += 1
+                    print("at coordinates", coordinates, "I count", player_tokens)
+                coordinates = self.increment_coordinates(coordinates, x_amount, y_amount)
+            if player_tokens == 5:
+                print("There are five tokens!")
+                return True
+            else:
+                return False
+                       
 
     def is_winner(self, move):
             pass
     
     def is_winner_vertically(self, move):
-            pass
-        
+            if self.count_five_tokens(move.move_coordinates, "J", 0, 1):
+                print("There are five!")
+                return "J"
+            if self.count_five_tokens(move.move_coordinates, "J", 0, -1):
+                print("There are five!")
+                return "J"
+            if self.count_five_tokens(move.move_coordinates, "K", 0, 1):
+                print("There are five!")
+                return "K"
+            if self.count_five_tokens(move.move_coordinates, "K", 0, -1):
+                return "K"
+                                    
+
     def is_winner_horizontally(self, move):
             pass
         
@@ -162,6 +177,7 @@ class Move(TimeStampedModel):
     # Sanitizing the input with e.g Regex would be necassary, but is skipped here for brevity
     move_coordinates = models.CharField(max_length=15, blank=False) 
     
+
     def save(self, *args, **kwargs):
         coordinates_for_test = self.move_coordinates
         if type(coordinates_for_test) is not str:
